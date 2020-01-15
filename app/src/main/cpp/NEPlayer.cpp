@@ -15,8 +15,6 @@ extern "C" {
 #include <libavformat/avformat.h>
 }
 
-#define LOGI(FORMAT, ...) __android_log_print(ANDROID_LOG_INFO, "kelly", FORMAT, ##__VA_ARGS__);
-
 NEPlayer::NEPlayer(const char *data_source, JniCallbackHelper *jni_callback_helper) {
 //     this->data_source = data_source;
     this->data_source = new char[strlen(data_source) + 1];//c++中字符串以"\0"结尾，所以需要+1
@@ -62,6 +60,9 @@ void NEPlayer::_prepare() {
     av_dict_free(&dictionary);
     if (ret) {
         LOGI("%s", "prepare, avformat_open_input error.");
+        if (jni_callback_helper) {
+            jni_callback_helper->onError(THREAD_CHILD, FFMPEG_CAN_NOT_OPEN_URL);
+        }
         return;
     }
 
@@ -71,6 +72,9 @@ void NEPlayer::_prepare() {
     ret = avformat_find_stream_info(formatContext, 0);
     if (ret < 0) {
         LOGI("%s", "prepare, avformat_find_stream_info error.");
+        if (jni_callback_helper) {
+            jni_callback_helper->onError(THREAD_CHILD, FFMPEG_CAN_NOT_FIND_STREAMS);
+        }
         return;
     }
 
@@ -92,6 +96,9 @@ void NEPlayer::_prepare() {
         AVCodec *codec = avcodec_find_decoder(codecParameters->codec_id);
         if (!codec) {
             LOGI("%s", "prepare, avcodec_find_decoder error.")
+            if (jni_callback_helper) {
+                jni_callback_helper->onError(THREAD_CHILD, FFMPEG_FIND_DECODER_FAIL);
+            }
             return;
         }
 
@@ -101,6 +108,9 @@ void NEPlayer::_prepare() {
         AVCodecContext *codecContext = avcodec_alloc_context3(codec);
         if (!codecContext) {
             LOGI("%s", "prepare, avcodec_alloc_context3 error.")
+            if (jni_callback_helper) {
+                jni_callback_helper->onError(THREAD_CHILD, FFMPEG_ALLOC_CODEC_CONTEXT_FAIL);
+            }
             return;
         }
 
@@ -110,6 +120,9 @@ void NEPlayer::_prepare() {
         ret = avcodec_parameters_to_context(codecContext, codecParameters);
         if (ret < 0) {
             LOGI("%s", "prepare, avcodec_parameters_to_context error.")
+            if (jni_callback_helper) {
+                jni_callback_helper->onError(THREAD_CHILD, FFMPEG_CODEC_CONTEXT_PARAMETERS_FAIL);
+            }
             return;
         }
 
@@ -119,6 +132,9 @@ void NEPlayer::_prepare() {
         ret = avcodec_open2(codecContext, codec, 0);
         if (ret < 0) {
             LOGI("%s", "prepare, avcodec_open2 error.")
+            if (jni_callback_helper) {
+                jni_callback_helper->onError(THREAD_CHILD, FFMPEG_OPEN_DECODER_FAIL);
+            }
             return;
         }
 
@@ -139,6 +155,9 @@ void NEPlayer::_prepare() {
      */
     if (!audio_channel && !video_channel) {
         LOGI("%s", "没有找到音频流和视频流.")
+        if (jni_callback_helper) {
+            jni_callback_helper->onError(THREAD_CHILD, FFMPEG_NO_MEDIA);
+        }
         return;
     }
 

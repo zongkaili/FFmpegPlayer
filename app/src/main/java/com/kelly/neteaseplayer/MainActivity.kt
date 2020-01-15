@@ -19,8 +19,14 @@ class MainActivity : AppCompatActivity() {
         mPlayer?.setDataSource(File(Environment.getExternalStorageDirectory() , "/live.mp4").absolutePath)
         mPlayer?.setOnPrepareListener(object : MyPlayer.OnPrepareListener {
             override fun onPrepared() {
-                Toast.makeText(this@MainActivity, "媒体已准备好了", Toast.LENGTH_SHORT).show()
+                runOnUiThread { Toast.makeText(this@MainActivity, "媒体已准备好了", Toast.LENGTH_SHORT).show() }
             }
+        })
+        mPlayer?.setOnErrorListener(object : MyPlayer.OnErrorListener {
+            override fun onError(errorCode: Int) {
+                runOnUiThread { Toast.makeText(this@MainActivity, "出错啦，错误码 >>> $errorCode ", Toast.LENGTH_SHORT).show() }
+            }
+
         })
         // Example of a call to a native method
         sample_text.text = mPlayer?.stringFromJNI()

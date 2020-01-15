@@ -15,10 +15,13 @@ public:
 
     void onPrepared(int thread_mode);
 
+    void onError(int thread_mode, int error_code);
+
 private:
     JNIEnv *env = 0;
     jobject instance;
     jmethodID jmd_prepared;
+    jmethodID jmd_onError;
     JavaVM *javaVM = 0;
 };
 
