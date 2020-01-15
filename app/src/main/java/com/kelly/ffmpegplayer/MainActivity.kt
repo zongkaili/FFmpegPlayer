@@ -1,4 +1,4 @@
-package com.kelly.neteaseplayer
+package com.kelly.ffmpegplayer
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         mPlayer = MyPlayer()
         mPlayer?.setSurfaceView(surfaceView)
-        mPlayer?.setDataSource(File(Environment.getExternalStorageDirectory() , "/live.mp4").absolutePath)
+        mPlayer?.setDataSource(File(Environment.getExternalStorageDirectory() , "live.mp4").absolutePath)
         mPlayer?.setOnPrepareListener(object : MyPlayer.OnPrepareListener {
             override fun onPrepared() {
                 runOnUiThread { Toast.makeText(this@MainActivity, "媒体已准备好了", Toast.LENGTH_SHORT).show() }

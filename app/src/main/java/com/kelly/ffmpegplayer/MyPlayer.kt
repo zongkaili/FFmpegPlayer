@@ -1,4 +1,4 @@
-package com.kelly.neteaseplayer
+package com.kelly.ffmpegplayer
 
 import android.text.TextUtils
 import android.view.Surface

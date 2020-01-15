@@ -1,4 +1,4 @@
-package com.kelly.neteaseplayer
+package com.kelly.ffmpegplayer
 
 import org.junit.Test
 

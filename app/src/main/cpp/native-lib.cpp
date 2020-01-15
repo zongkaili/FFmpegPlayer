@@ -30,7 +30,7 @@ jint JNI_OnLoad(JavaVM *vm, void *args) {
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_kelly_neteaseplayer_MyPlayer_stringFromJNI(
+Java_com_kelly_ffmpegplayer_MyPlayer_stringFromJNI(
         JNIEnv *env,
         jobject /* this */) {
     std::string hello = "Hello from C++";
@@ -38,7 +38,7 @@ Java_com_kelly_neteaseplayer_MyPlayer_stringFromJNI(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_kelly_neteaseplayer_MyPlayer_prepareNative(JNIEnv *env, jobject thiz, jstring data_source_) {
+Java_com_kelly_ffmpegplayer_MyPlayer_prepareNative(JNIEnv *env, jobject thiz, jstring data_source_) {
     const char *data_source = env->GetStringUTFChars(data_source_, 0);
     JniCallbackHelper *jni_callback_helper = new JniCallbackHelper(javaVm, env, thiz);
     NEPlayer *player = new NEPlayer(data_source, jni_callback_helper);
@@ -48,22 +48,22 @@ Java_com_kelly_neteaseplayer_MyPlayer_prepareNative(JNIEnv *env, jobject thiz, j
 
 }
 extern "C" JNIEXPORT void JNICALL
-Java_com_kelly_neteaseplayer_MyPlayer_startNative(JNIEnv *env, jobject instance) {
+Java_com_kelly_ffmpegplayer_MyPlayer_startNative(JNIEnv *env, jobject instance) {
 
 }
 extern "C" JNIEXPORT void JNICALL
-Java_com_kelly_neteaseplayer_MyPlayer_stopNative(JNIEnv *env, jobject instance) {
+Java_com_kelly_ffmpegplayer_MyPlayer_stopNative(JNIEnv *env, jobject instance) {
 
 }
 extern "C" JNIEXPORT void JNICALL
-Java_com_kelly_neteaseplayer_MyPlayer_releaseNative(JNIEnv *env, jobject instance) {
+Java_com_kelly_ffmpegplayer_MyPlayer_releaseNative(JNIEnv *env, jobject instance) {
 
 }
 
 //***********************************************
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_kelly_neteaseplayer_MyPlayer_videoDecodeAndRender(
+Java_com_kelly_ffmpegplayer_MyPlayer_videoDecodeAndRender(
         JNIEnv *env, jobject instance,
         jstring path_, jobject surface) {
     LOGI("%s", "videoDecodeAndRender, start.");
@@ -162,7 +162,7 @@ Java_com_kelly_neteaseplayer_MyPlayer_videoDecodeAndRender(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_kelly_neteaseplayer_MyPlayer_audioDecode(
+Java_com_kelly_ffmpegplayer_MyPlayer_audioDecode(
         JNIEnv *env, jobject instance,
         jstring input_, jstring output_) {
     const char *input = env->GetStringUTFChars(input_, 0);

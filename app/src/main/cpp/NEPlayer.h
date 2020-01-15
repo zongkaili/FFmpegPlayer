@@ -2,8 +2,8 @@
 // Created by 宗开黎 on 2020-01-13.
 //
 
-#ifndef NETEASEPLAYER_NEPLAYER_H
-#define NETEASEPLAYER_NEPLAYER_H
+#ifndef FFMPEGPLAYER_NEPLAYER_H
+#define FFMPEGPLAYER_NEPLAYER_H
 
 
 #include "AudioChannel.h"
@@ -29,4 +29,4 @@ private:
 };
 
 
-#endif //NETEASEPLAYER_NEPLAYER_H
+#endif //FFMPEGPLAYER_NEPLAYER_H
