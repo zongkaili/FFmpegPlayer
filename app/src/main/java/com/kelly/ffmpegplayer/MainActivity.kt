@@ -20,6 +20,7 @@ class MainActivity : AppCompatActivity() {
         mPlayer?.setOnPrepareListener(object : MyPlayer.OnPrepareListener {
             override fun onPrepared() {
                 runOnUiThread { Toast.makeText(this@MainActivity, "媒体已准备好了", Toast.LENGTH_SHORT).show() }
+                mPlayer?.start()
             }
         })
         mPlayer?.setOnErrorListener(object : MyPlayer.OnErrorListener {

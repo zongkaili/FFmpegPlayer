@@ -68,6 +68,8 @@ class MyPlayer : SurfaceHolder.Callback {
     private external fun stopNative()
     private external fun releaseNative()
 
+    private external fun setSurfaceNative(surface: Surface)
+
     /**
      * jni回调方法
      */
@@ -88,7 +90,7 @@ class MyPlayer : SurfaceHolder.Callback {
     }
 
     override fun surfaceChanged(holder: SurfaceHolder?, format: Int, width: Int, height: Int) {
-        holder?.surface
+        setSurfaceNative(holder?.surface!!)
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder?) {

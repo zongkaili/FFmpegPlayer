@@ -25,5 +25,4 @@ private:
     JavaVM *javaVM = 0;
 };
 
-
 #endif //FFMPEGPLAYER_JNICALLBACKHELPER_H

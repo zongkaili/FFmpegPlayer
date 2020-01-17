@@ -41,12 +41,11 @@ void NEPlayer::prepare() {
      * 开子线程执行耗时任务
      */
     pthread_create(&pid_prepare, 0, task_prepare, this);
-
 }
 
 void NEPlayer::_prepare() {
     //1.打开媒体地址
-    AVFormatContext *formatContext = avformat_alloc_context();
+    formatContext = avformat_alloc_context();
 
     AVDictionary *dictionary = 0;
     av_dict_set(&dictionary, "timeout", "5000000", 0);//单位微秒
@@ -143,10 +142,11 @@ void NEPlayer::_prepare() {
          */
         if (codecParameters->codec_type == AVMEDIA_TYPE_AUDIO) {
             //音频流
-            audio_channel = new AudioChannel();
+            audio_channel = new AudioChannel(i, codecContext);
         } else if (codecParameters->codec_type == AVMEDIA_TYPE_VIDEO) {
             //视频流
-            video_channel = new VideoChannel();
+            video_channel = new VideoChannel(i, codecContext);
+            video_channel->setRenderCallback(renderCallback);
         }
     }
 
@@ -165,6 +165,48 @@ void NEPlayer::_prepare() {
     if (jni_callback_helper) {
         jni_callback_helper->onPrepared(THREAD_CHILD);
     }
+}
+
+void *task_start(void *args) {
+    NEPlayer *player = static_cast<NEPlayer *>(args);
+    player->_start();
+    return 0;//函数指针一定要return
+}
+
+void NEPlayer::start() {
+    isPlaying = 1;
+    if (video_channel) {
+        video_channel->start();
+    }
+    pthread_create(&pid_start, 0, task_start, this);
+}
+
+/**
+ * 真正开始播放
+ * 读取音视频包，加入相应的音视频队列
+ */
+void NEPlayer::_start() {
+    while (isPlaying) {
+        AVPacket *packet = av_packet_alloc();
+        int ret = av_read_frame(formatContext, packet);
+        if (!ret) {//读取成功
+           if (video_channel && video_channel->stream_index == packet->stream_index) {//视频数据包
+               video_channel->packets.push(packet);
+           } else if (audio_channel && audio_channel->stream_index == packet->stream_index) {//音频数据包
+
+           }
+        } else if (ret == AVERROR_EOF) {//End of file
+
+        } else {
+            break;
+        }
+    }
+    isPlaying = 0;
+//    video_channel->stop();
+}
+
+void NEPlayer::setRenderCallback(RenderCallback renderCallback) {
+    this->renderCallback = renderCallback;
 }
 
 

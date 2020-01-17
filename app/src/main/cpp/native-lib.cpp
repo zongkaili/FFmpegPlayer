@@ -24,6 +24,10 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 JavaVM *javaVm = 0;
+NEPlayer *player = 0;
+ANativeWindow* window = 0;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;//静态初始化
+
 jint JNI_OnLoad(JavaVM *vm, void *args) {
     javaVm = vm;
     return JNI_VERSION_1_6;
@@ -37,19 +41,48 @@ Java_com_kelly_ffmpegplayer_MyPlayer_stringFromJNI(
     return env->NewStringUTF(av_version_info());
 }
 
+void renderFrame(uint8_t *src_data, int width, int height, int src_linesize) {
+    pthread_mutex_lock(&mutex);
+    //先释放之前的显示窗口
+    if (!window) {
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
+    //设置窗口属性
+    ANativeWindow_setBuffersGeometry(window, width, height, WINDOW_FORMAT_RGBA_8888);
+
+    ANativeWindow_Buffer window_buffer;
+    if (ANativeWindow_lock(window, &window_buffer, 0)) {
+        ANativeWindow_release(window);
+        window = 0;
+        return;
+    }
+    //填充rgb数据给dst_data
+    uint8_t *dst_data = static_cast<uint8_t *>(window_buffer.bits);
+    int dst_linesize = window_buffer.stride * 4;//一行数据的长度，每个像素4个字节， window_buffer.stride：buffer一行的像素个数
+    for (int i = 0; i < window_buffer.height; ++i) {
+        //通过内存拷贝来进行渲染
+        memcpy(dst_data + i * dst_linesize, src_data + i * src_linesize, dst_linesize);
+    }
+    ANativeWindow_unlockAndPost(window);
+    pthread_mutex_unlock(&mutex);
+}
+
 extern "C" JNIEXPORT void JNICALL
-Java_com_kelly_ffmpegplayer_MyPlayer_prepareNative(JNIEnv *env, jobject thiz, jstring data_source_) {
+Java_com_kelly_ffmpegplayer_MyPlayer_prepareNative(JNIEnv *env, jobject thiz,
+                                                   jstring data_source_) {
     const char *data_source = env->GetStringUTFChars(data_source_, 0);
     JniCallbackHelper *jni_callback_helper = new JniCallbackHelper(javaVm, env, thiz);
-    NEPlayer *player = new NEPlayer(data_source, jni_callback_helper);
+    player = new NEPlayer(data_source, jni_callback_helper);
+    player->setRenderCallback(renderFrame);
     player->prepare();
-
     env->ReleaseStringUTFChars(data_source_, data_source);
-
 }
 extern "C" JNIEXPORT void JNICALL
 Java_com_kelly_ffmpegplayer_MyPlayer_startNative(JNIEnv *env, jobject instance) {
-
+    if (player) {
+        player->start();
+    }
 }
 extern "C" JNIEXPORT void JNICALL
 Java_com_kelly_ffmpegplayer_MyPlayer_stopNative(JNIEnv *env, jobject instance) {
@@ -58,6 +91,19 @@ Java_com_kelly_ffmpegplayer_MyPlayer_stopNative(JNIEnv *env, jobject instance) {
 extern "C" JNIEXPORT void JNICALL
 Java_com_kelly_ffmpegplayer_MyPlayer_releaseNative(JNIEnv *env, jobject instance) {
 
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_kelly_ffmpegplayer_MyPlayer_setSurfaceNative(JNIEnv *env, jobject clazz, jobject surface) {
+    pthread_mutex_lock(&mutex);
+    //先释放之前的显示窗口
+    if (window) {
+        ANativeWindow_release(window);
+        window = 0;
+    }
+    //创建新的窗口用于视频显示
+    window = ANativeWindow_fromSurface(env, surface);
+    pthread_mutex_unlock(&mutex);
 }
 
 //***********************************************
