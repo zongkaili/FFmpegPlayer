@@ -226,7 +226,7 @@ Java_com_kelly_ffmpegplayer_MyPlayer_audioDecode(
         LOGI("%s", "无法获取输入文件信息");
         return;
     }
-    //视频时长（单位：微妙us，装换为秒需要除以1000000）
+    //视频时长（单位：微妙us，转换为秒需要除以1000000）
     int audio_stream_idx = -1;
     for (int i = 0; i < formatContext->nb_streams; ++i) {
         if (formatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {

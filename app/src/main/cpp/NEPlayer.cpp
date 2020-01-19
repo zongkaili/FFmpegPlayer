@@ -178,6 +178,9 @@ void NEPlayer::start() {
     if (video_channel) {
         video_channel->start();
     }
+    if (audio_channel) {
+        audio_channel->start();
+    }
     pthread_create(&pid_start, 0, task_start, this);
 }
 
@@ -193,7 +196,7 @@ void NEPlayer::_start() {
            if (video_channel && video_channel->stream_index == packet->stream_index) {//视频数据包
                video_channel->packets.push(packet);
            } else if (audio_channel && audio_channel->stream_index == packet->stream_index) {//音频数据包
-
+               audio_channel->packets.push(packet);
            }
         } else if (ret == AVERROR_EOF) {//End of file
 

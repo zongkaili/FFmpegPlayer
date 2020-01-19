@@ -47,7 +47,7 @@ public:
             *frame = 0;
         }
     }
-
+    int isPlaying;
     int stream_index;
     SafeQueue<AVPacket *> packets;
     SafeQueue<AVFrame *> frames;
