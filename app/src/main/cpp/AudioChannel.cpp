@@ -3,9 +3,10 @@
 //
 
 #include "AudioChannel.h"
+#include "macro.h"
 
-AudioChannel::AudioChannel(int stream_index, AVCodecContext *codecContext) : BaseChannel(
-        stream_index, codecContext) {
+AudioChannel::AudioChannel(int stream_index, AVCodecContext *codecContext, AVRational time_base)
+        : BaseChannel(stream_index, codecContext, time_base) {
     out_sample_rate = 44100;
     //输出缓冲区初始化
     //输出样本的大小
@@ -98,9 +99,15 @@ int AudioChannel::getPCM() {
                 frame->sample_rate, out_sample_rate, AV_ROUND_UP));
         //number of samples output per channel, 每个声道的样本数
         int samples_per_channel = swr_convert(swr_context, &out_buffers, out_nb_samples,
-                (const uint8_t **)(frame->data), frame->nb_samples);
+                                              (const uint8_t **) (frame->data), frame->nb_samples);
         //重采样后pcm数据大小 = 每个声道的样本数 * 声道数 * 一个样本的大小
         pcm_size = samples_per_channel * out_sample_size * out_channels;
+
+        //每帧音频的时间
+        audio_time = frame->best_effort_timestamp * av_q2d(time_base);
+        if (jni_callback_helper) {
+            jni_callback_helper->onProgress(THREAD_CHILD, audio_time);
+        }
         break;
     }
     releaseAVFrame(&frame);
@@ -254,6 +261,13 @@ void AudioChannel::audio_play() {
 
 }
 
+AudioChannel::~AudioChannel() {
+    if (swr_context) {
+        swr_free(&swr_context);
+        swr_context = 0;
+    }
+    DELETE(out_buffers);
+}
 
 /**
  * 1.解码
@@ -265,6 +279,38 @@ void AudioChannel::start() {
     frames.setWork(1);
     pthread_create(&pid_audio_decode, 0, task_audio_decode, this);
     pthread_create(&pid_audio_play, 0, task_audio_play, this);
+}
+
+void AudioChannel::stop() {
+    isPlaying = 0;
+    packets.setWork(0);
+    frames.setWork(0);
+    pthread_join(pid_audio_decode, 0);
+    pthread_join(pid_audio_play, 0);
+
+    //7.1 设置停止状态
+    if (bqPlayerPlay) {
+        (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_STOPPED);
+        bqPlayerPlay = 0;
+    }
+    //7.2 销毁播放器
+    if (bqPlayerObject) {
+        (*bqPlayerObject)->Destroy(bqPlayerObject);
+        bqPlayerObject = 0;
+        bqPlayerBufferQueue = 0;
+    }
+    //7.3 销毁混音器
+    if (outputMixObject) {
+        (*outputMixObject)->Destroy(outputMixObject);
+        outputMixObject = 0;
+    }
+    //7.4 销毁引擎
+    if (engineObject) {
+        (*engineObject)->Destroy(engineObject);
+        engineObject = 0;
+        engineInterface = 0;
+    }
+
 }
 
 

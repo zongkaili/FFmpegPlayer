@@ -14,6 +14,8 @@ extern "C" {
 #include "JniCallbackHelper.h"
 
 class NEPlayer {
+    friend void *task_stop(void *args);
+
 public:
     NEPlayer(const char *data_source, JniCallbackHelper *pHelper);
 
@@ -29,6 +31,12 @@ public:
 
     void setRenderCallback(RenderCallback renderCallback);
 
+    jint getDuration();
+
+    void seek(jint i);
+
+    void stop();
+
 private:
     char *data_source;
     AudioChannel *audio_channel = 0;
@@ -36,10 +44,12 @@ private:
     JniCallbackHelper *jni_callback_helper = 0;
     pthread_t pid_prepare;
     pthread_t pid_start;
+    pthread_t pid_stop;
     AVFormatContext *formatContext = 0;
     bool isPlaying;
-
+    int mDuration;
     RenderCallback renderCallback;
+    pthread_mutex_t seek_mutex;
 };
 
 

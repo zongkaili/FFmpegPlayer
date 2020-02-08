@@ -7,20 +7,24 @@
 
 #include <queue>
 #include <pthread.h>
+
 using namespace std;
 
-template <typename T>
+template<typename T>
 /**
  * 线程安全的队列
  * @tparam T
  */
 class SafeQueue {
     typedef void(*ReleaseCallback)(T *);
+    typedef void(*SyncCallback)(queue<T> &);
+
 public:
     SafeQueue() {
-       pthread_mutex_init(&mutex, 0);//动态初始化
-       pthread_cond_init(&cond, 0);
+        pthread_mutex_init(&mutex, 0);//动态初始化
+        pthread_cond_init(&cond, 0);
     }
+
     ~SafeQueue() {
         pthread_mutex_destroy(&mutex);
         pthread_cond_destroy(&cond);
@@ -96,16 +100,30 @@ public:
         pthread_mutex_unlock(&mutex);
     }
 
+    /**
+   * 同步
+   */
+    void sync() {
+        pthread_mutex_lock(&mutex);
+        syncCallback(q);
+        pthread_mutex_unlock(&mutex);
+    }
+
     void setReleaseCallback(ReleaseCallback releaseCallback) {
         this->releaseCallback = releaseCallback;
     }
 
+    void setSyncCallback(SyncCallback syncCallback) {
+        this->syncCallback = syncCallback;
+    }
+
 private:
-    queue <T> q;
+    queue<T> q;
     pthread_mutex_t mutex;//互斥锁
     pthread_cond_t cond;//条件变量
     int work;//标记当前队列是否是工作状态
     ReleaseCallback releaseCallback;
+    SyncCallback syncCallback;
 };
 
 #endif //FFMPEGPLAYER_SAFE_QUEUE_H

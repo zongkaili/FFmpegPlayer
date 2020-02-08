@@ -16,7 +16,9 @@ extern "C" {
 class AudioChannel : public BaseChannel {
 
 public:
-    AudioChannel(int stream_index, AVCodecContext *codecContext);
+    AudioChannel(int stream_index, AVCodecContext *codecContext, AVRational time_base);
+
+    virtual ~AudioChannel();
 
     void start();
 
@@ -31,6 +33,8 @@ public:
     int out_buffers_size;
     int out_sample_size;
     int out_channels;
+
+    void stop();
 
 private:
     pthread_t pid_audio_decode;

@@ -5,6 +5,7 @@
 #include <android/log.h>
 #include "NEPlayer.h"
 #include "JniCallbackHelper.h"
+#include "macro.h"
 
 #define LOGI(FORMAT, ...) __android_log_print(ANDROID_LOG_INFO, "kelly", FORMAT, ##__VA_ARGS__);
 #define LOGE(FORMAT, ...) __android_log_print(ANDROID_LOG_ERROR, "kelly", FORMAT, ##__VA_ARGS__);
@@ -86,11 +87,21 @@ Java_com_kelly_ffmpegplayer_MyPlayer_startNative(JNIEnv *env, jobject instance) 
 }
 extern "C" JNIEXPORT void JNICALL
 Java_com_kelly_ffmpegplayer_MyPlayer_stopNative(JNIEnv *env, jobject instance) {
-
+    if (player) {
+        player->stop();
+    }
 }
 extern "C" JNIEXPORT void JNICALL
 Java_com_kelly_ffmpegplayer_MyPlayer_releaseNative(JNIEnv *env, jobject instance) {
-
+    pthread_mutex_lock(&mutex);
+    //先释放之前的显示窗口
+    if (window) {
+        ANativeWindow_release(window);
+        window = 0;
+    }
+    //创建新的窗口用于视频显示
+    pthread_mutex_unlock(&mutex);
+    DELETE(player);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -106,7 +117,24 @@ Java_com_kelly_ffmpegplayer_MyPlayer_setSurfaceNative(JNIEnv *env, jobject clazz
     pthread_mutex_unlock(&mutex);
 }
 
-//***********************************************
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_kelly_ffmpegplayer_MyPlayer_getDurationNative(JNIEnv *env, jobject thiz) {
+    if (player) {
+        return player->getDuration();
+    }
+    return 0;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_kelly_ffmpegplayer_MyPlayer_seekNative(JNIEnv *env, jobject thiz, jint play_progress) {
+    if (player) {
+        player->seek(play_progress);
+    }
+}
+
+//*********************之前的实现方式，已被重新封装**************************
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_kelly_ffmpegplayer_MyPlayer_videoDecodeAndRender(

@@ -2,6 +2,8 @@
 // Created by 宗开黎 on 2020-01-14.
 //
 
+#include <android/log.h>
+
 #ifndef FFMPEGPLAYER_MACRO_H
 #define FFMPEGPLAYER_MACRO_H
 
@@ -10,6 +12,7 @@
 
 #define LOGI(FORMAT, ...) __android_log_print(ANDROID_LOG_INFO, "kelly", FORMAT, ##__VA_ARGS__);
 #define LOGE(FORMAT, ...) __android_log_print(ANDROID_LOG_ERROR, "kelly", FORMAT, ##__VA_ARGS__);
+#define DELETE(object) if (object) { delete object; object = 0;}
 
 //错误代码
 #define ERROR_CODE_OK 0

@@ -7,13 +7,14 @@
 
 
 #include "BaseChannel.h"
+#include "AudioChannel.h"
 
 typedef void (*RenderCallback)(uint8_t *, int, int, int);
 
 class VideoChannel : public BaseChannel {
 
 public:
-    VideoChannel(int stream_index, AVCodecContext *codecContext);
+    VideoChannel(int stream_index, AVCodecContext *codecContext, AVRational rational, int i);
 
     void start();
 
@@ -23,10 +24,16 @@ public:
 
     void setRenderCallback(RenderCallback renderCallback);
 
+    void setAudioChannel(AudioChannel *pChannel);
+
+    void stop();
+
 private:
     pthread_t pid_video_decode;
     pthread_t pid_video_play;
     RenderCallback renderCallback;
+    int fps;
+    AudioChannel *audio_channel = 0;
 };
 
 

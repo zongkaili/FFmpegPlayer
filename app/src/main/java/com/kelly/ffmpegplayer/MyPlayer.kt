@@ -42,6 +42,7 @@ class MyPlayer : SurfaceHolder.Callback {
 
     private var onPrepareListener: OnPrepareListener? = null
     private var onErrorListener: OnErrorListener? = null
+    private var onProgressListener: OnProgressListener? = null
 
     fun setOnPrepareListener(listener: OnPrepareListener) {
         this.onPrepareListener = listener
@@ -49,6 +50,10 @@ class MyPlayer : SurfaceHolder.Callback {
 
     fun setOnErrorListener(listener: OnErrorListener) {
         this.onErrorListener = listener;
+    }
+
+    fun setOnProgressListener(onProgressListener: OnProgressListener) {
+        this.onProgressListener = onProgressListener
     }
 
     interface OnPrepareListener {
@@ -59,6 +64,10 @@ class MyPlayer : SurfaceHolder.Callback {
         fun onError(errorCode: Int)
     }
 
+    interface OnProgressListener {
+        fun onProgress(progress: Int)
+    }
+
     external fun stringFromJNI(): String
     external fun audioDecode(input: String, output: String)
     private external fun videoDecodeAndRender(path: String, surface: Surface)
@@ -67,6 +76,8 @@ class MyPlayer : SurfaceHolder.Callback {
     private external fun startNative()
     private external fun stopNative()
     private external fun releaseNative()
+    private external fun getDurationNative(): Int
+    private external fun seekNative(playProgress: Int)
 
     private external fun setSurfaceNative(surface: Surface)
 
@@ -81,12 +92,28 @@ class MyPlayer : SurfaceHolder.Callback {
         onErrorListener?.onError(errorCode)
     }
 
+    public fun onProgress(progress: Int) {
+        onProgressListener?.onProgress(progress)
+    }
+
     private var mSurfaceHolder: SurfaceHolder? = null
 
     fun setSurfaceView(surfaceView: SurfaceView) {
         mSurfaceHolder?.removeCallback(this)
         mSurfaceHolder = surfaceView.holder
         mSurfaceHolder?.addCallback(this)
+    }
+
+    /**
+     * 获取视频总时长
+     * @return
+     */
+    fun getDuration(): Int {
+        return getDurationNative()
+    }
+
+    fun seek(playProgress: Int) {
+        seekNative(playProgress)
     }
 
     override fun surfaceChanged(holder: SurfaceHolder?, format: Int, width: Int, height: Int) {
