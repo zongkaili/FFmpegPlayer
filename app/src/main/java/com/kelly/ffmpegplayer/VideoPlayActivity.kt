@@ -41,7 +41,6 @@ class VideoPlayActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener {
                 mDuration = mPlayer?.getDuration()!!
                 runOnUiThread {
                     //直播 通过ffmpeg 得到的 duration 是 0
-                    //直播 通过ffmpeg 得到的 duration 是 0
                     if (mDuration != 0) { //本地视频文件
                         mTvTime?.text = "00:00/" + getMinutes(mDuration) + ":" + getSeconds(mDuration)
                         mTvTime?.visibility = View.VISIBLE
