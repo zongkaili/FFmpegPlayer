@@ -1,6 +1,16 @@
 cmake_minimum_required(VERSION 3.4.1)
 
 file(GLOB SOURCE src/main/cpp/*.cpp)
+
+#引入指定目录下的CMakeLists.txt
+add_subdirectory(src/main/cpp/librtmp)
+
+include_directories(src/main/cpp/librtmp)
+
+include_directories(src/main/cpp/x264/include)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L${CMAKE_SOURCE_DIR}/src/main/cpp/x264/libs/${CMAKE_ANDROID_ARCH_ABI}")
+
 add_library( # Sets the name of the library.
         native-lib
         SHARED
@@ -21,4 +31,6 @@ target_link_libraries( # Specifies the target library.
         ${log-lib}
         android
         z
-        OpenSLES)
+        OpenSLES
+        rtmp
+        x264)

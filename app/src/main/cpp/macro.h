@@ -10,8 +10,8 @@
 #define THREAD_MAIN 1
 #define THREAD_CHILD 2
 
-#define LOGI(FORMAT, ...) __android_log_print(ANDROID_LOG_INFO, "kelly", FORMAT, ##__VA_ARGS__);
-#define LOGE(FORMAT, ...) __android_log_print(ANDROID_LOG_ERROR, "kelly", FORMAT, ##__VA_ARGS__);
+#define LOGI(FORMAT, ...) __android_log_print(ANDROID_LOG_INFO, "PLAYER_NATIVE", FORMAT, ##__VA_ARGS__);
+#define LOGE(FORMAT, ...) __android_log_print(ANDROID_LOG_ERROR, "PLAYER_NATIVE", FORMAT, ##__VA_ARGS__);
 #define DELETE(object) if (object) { delete object; object = 0;}
 
 //错误代码
