@@ -8,6 +8,6 @@ FFmpeg 编解码，直播推流学习demo
    
  - 直播：rtmp推流 & x264编解码，jni实现
    
-   注：此功能依赖于服务器，所以需要搭建服务器环境，搭建流程可参考：https://www.jianshu.com/p/cf7f0552ffe9，此功能可用于学习rtmp直播推流和x264编解码的jni实现逻辑。
-    推流成功后，可用FFmpeg命令播放服务器视频流：
-    ffplay -i rtmp://xxx.xxx.xxx.xxx/myapp/
+   注：此功能依赖于服务器，所以需要搭建服务器环境，搭建流程可参考：https://www.jianshu.com/p/cf7f0552ffe9，
+   此功能可用于学习rtmp直播推流和x264编解码的jni实现逻辑。
+   推流成功后，可用FFmpeg命令播放服务器视频流：ffplay -i rtmp://xxx.xxx.xxx.xxx/myapp/
