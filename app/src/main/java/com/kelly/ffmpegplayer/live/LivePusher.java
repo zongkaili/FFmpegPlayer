@@ -14,7 +14,7 @@ public class LivePusher {
     public LivePusher(Activity activity) {
         initNative();
         mVideoChannel = new VideoChannel(activity, this);
-        mAudioChannel = new AudioChannel();
+        mAudioChannel = new AudioChannel(this);
     }
 
     public void switchCamera() {
@@ -90,5 +90,23 @@ public class LivePusher {
      * 释放
      */
     public native void releaseNative();
+
+    /**
+     * 初始化音频编码器
+     *
+     * @param sampleRateInHz 采样率，单位HZ
+     * @param channels       声道数
+     */
+    public native void initAudioEncoderNative(int sampleRateInHz, int channels);
+//    public native void initAudioEncoderNative(int sampleRateInHz, int channelConfig);
+
+    /**
+     * 推送音频数据（进行aac编码）
+     *
+     * @param data
+     */
+    public native void pushAudioNative(byte[] data);
+
+    public native int getInputSamplesNative();
 
 }

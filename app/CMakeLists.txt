@@ -9,7 +9,10 @@ include_directories(src/main/cpp/librtmp)
 
 include_directories(src/main/cpp/x264/include)
 
+include_directories(src/main/cpp/libfaac/include)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L${CMAKE_SOURCE_DIR}/src/main/cpp/x264/libs/${CMAKE_ANDROID_ARCH_ABI}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L${CMAKE_SOURCE_DIR}/src/main/cpp/libfaac/libs/${CMAKE_ANDROID_ARCH_ABI}")
 
 add_library( # Sets the name of the library.
         native-lib
@@ -33,4 +36,5 @@ target_link_libraries( # Specifies the target library.
         z
         OpenSLES
         rtmp
-        x264)
+        x264
+        faac)

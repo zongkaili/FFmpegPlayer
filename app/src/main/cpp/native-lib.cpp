@@ -7,6 +7,7 @@
 #include "JniCallbackHelper.h"
 #include "macro.h"
 #include "LiveVideoChannel.h"
+#include "LiveAudioChannel.h"
 //直播推流
 #include <rtmp.h>
 #include <x264.h>
@@ -27,7 +28,7 @@ extern "C" {
 }
 JavaVM *javaVm = 0;
 NEPlayer *player = 0;
-ANativeWindow* window = 0;
+ANativeWindow *window = 0;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;//静态初始化
 
 jint JNI_OnLoad(JavaVM *vm, void *args) {
@@ -349,10 +350,11 @@ Java_com_kelly_ffmpegplayer_MyPlayer_audioDecode(
 
 //*********************直播Live**************************
 LiveVideoChannel *live_video_channel = 0;
+LiveAudioChannel *live_audio_channel = 0;
 SafeQueue<RTMPPacket *> packets;
 bool isStart;
 pthread_t pid_start;
-uint32_t  start_time;
+uint32_t start_time;
 
 void ReleaseRTMPPacket(RTMPPacket **packet) {
     if (*packet) {
@@ -362,9 +364,9 @@ void ReleaseRTMPPacket(RTMPPacket **packet) {
     }
 }
 
-void callback(RTMPPacket *packet){
-    if(packet){
-        if (packet->m_nTimeStamp == -1){
+void callback(RTMPPacket *packet) {
+    if (packet) {
+        if (packet->m_nTimeStamp == -1) {
             //需要时间戳，就设置一个时间戳
             packet->m_nTimeStamp = RTMP_GetTime() - start_time;
         }
@@ -377,6 +379,8 @@ JNIEXPORT void JNICALL
 Java_com_kelly_ffmpegplayer_live_LivePusher_initNative(JNIEnv *env, jobject thiz) {
     live_video_channel = new LiveVideoChannel;
     live_video_channel->setVideoCallback(callback);
+    live_audio_channel = new LiveAudioChannel;
+    live_audio_channel->setAudioCallback(callback);
     packets.setReleaseCallback(ReleaseRTMPPacket);
 }
 
@@ -415,21 +419,21 @@ void *task_start_live(void *args) {
         }
         //跟服务器连通了
         //6, 记录开始推流的时间
-        start_time =  RTMP_GetTime();
+        start_time = RTMP_GetTime();
         packets.setWork(1);
         RTMPPacket *packet = 0;
         while (isStart) {
             int ret = packets.pop(packet);
-            if(!isStart){
+            if (!isStart) {
                 break;
             }
-            if (!ret){
+            if (!ret) {
                 continue;
             }
             //7, 发送数据包
             packet->m_nInfoField2 = rtmp->m_stream_id;
-            ret  = RTMP_SendPacket(rtmp, packet, 1);
-            if (!ret){
+            ret = RTMP_SendPacket(rtmp, packet, 1);
+            if (!ret) {
                 //发包失败，rtmp断开连接
                 break;
             }
@@ -439,7 +443,7 @@ void *task_start_live(void *args) {
     isStart = 0;
     packets.setWork(0);
     packets.clear();
-    if (rtmp){
+    if (rtmp) {
         RTMP_Close(rtmp);
         RTMP_Free(rtmp);
     }
@@ -449,7 +453,8 @@ void *task_start_live(void *args) {
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_kelly_ffmpegplayer_live_LivePusher_startLiveNative(JNIEnv *env, jobject thiz, jstring path_) {
+Java_com_kelly_ffmpegplayer_live_LivePusher_startLiveNative(JNIEnv *env, jobject thiz,
+                                                            jstring path_) {
     if (isStart) {
         return;
     }
@@ -472,17 +477,20 @@ Java_com_kelly_ffmpegplayer_live_LivePusher_stopLiveNative(JNIEnv *env, jobject 
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_kelly_ffmpegplayer_live_LivePusher_initVideoEncoderNative(JNIEnv *env, jobject thiz, jint width,
-                                                        jint height, jint bitrate, jint fps) {
-    if(live_video_channel){
+Java_com_kelly_ffmpegplayer_live_LivePusher_initVideoEncoderNative(JNIEnv *env, jobject thiz,
+                                                                   jint width,
+                                                                   jint height, jint bitrate,
+                                                                   jint fps) {
+    if (live_video_channel) {
         live_video_channel->initVideoEncoder(width, height, bitrate, fps);
     }
 }
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_kelly_ffmpegplayer_live_LivePusher_pushVideoNative(JNIEnv *env, jobject thiz, jbyteArray data_) {
-    if(!live_video_channel || !isStart){
+Java_com_kelly_ffmpegplayer_live_LivePusher_pushVideoNative(JNIEnv *env, jobject thiz,
+                                                            jbyteArray data_) {
+    if (!live_video_channel || !isStart) {
         return;
     }
     jbyte *data = env->GetByteArrayElements(data_, 0);
@@ -494,4 +502,35 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_kelly_ffmpegplayer_live_LivePusher_releaseNative(JNIEnv *env, jobject thiz) {
     DELETE(live_video_channel);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_kelly_ffmpegplayer_live_LivePusher_initAudioEncoderNative(JNIEnv *env, jobject thiz,
+                                                                   jint sample_rate,
+                                                                   jint channels) {
+    if (live_audio_channel) {
+        live_audio_channel->initAudioEncoder(sample_rate, channels);
+    }
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_kelly_ffmpegplayer_live_LivePusher_pushAudioNative(JNIEnv *env, jobject thiz,
+                                                            jbyteArray data_) {
+    if (!live_audio_channel || !isStart) {
+        return;
+    }
+    jbyte *data = env->GetByteArrayElements(data_, 0);
+    live_audio_channel->encodeData(data);
+    env->ReleaseByteArrayElements(data_, data, 0);
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_kelly_ffmpegplayer_live_LivePusher_getInputSamplesNative(JNIEnv *env, jobject thiz) {
+    if (live_audio_channel) {
+        return live_audio_channel->getInputSamples();
+    }
+    return -1;
 }
